@@ -34,3 +34,38 @@ def find_Orders_by_EngSSN(EngSSN):
                        WHERE p.EngSSN = '{EngSSN}';""")
 
     return cursor.fetchall()
+
+def find_tasks_by_EngSSN(EngSSN):
+    cursor.execute(f"""SELECT mt.TaskID, mt.TaskDescription, c.VIN, c.Brand, c.ModelName
+                       FROM MaintenanceTask mt
+                       JOIN Performs p ON mt.TaskID = p.TaskID
+                       JOIN Fix f ON mt.TaskID = f.TaskID
+                       JOIN Car c ON f.VIN = c.VIN
+                       WHERE p.EngSSN = '{EngSSN}';""")
+
+    return cursor.fetchall()
+
+def find_admin_by_ssn(SSN):
+    cursor.execute(f"""SELECT FirstName, SurName, LastName, Email FROM Employee
+                   WHERE SSN = '{SSN}' AND position='admin';""")
+    return cursor.fetchone()
+
+def add_employee(SSN, FirstName, SurName, LastName, Email, DOB, Sex, Salary, Position, CenterNumber):
+    string = f"""INSERT INTO Employee (SSN, FirstName, SurName, LastName, Email, Dob, Sex, Salary, Position, CenterNumber)
+                   VALUES ('{SSN}',
+                   '{FirstName}',
+                   '{SurName}',
+                   '{LastName}',
+                   '{Email}',
+                   '{DOB}',
+                   '{Sex}',
+                   {Salary},
+                   '{Position}',
+                   '{CenterNumber}');"""
+    print(cursor.execute(string))
+    conn.commit()
+
+def add_engineer(SSN, Spec, YOE):
+    cursor.execute(f"""INSERT INTO Engineer (EngSSN, Spec, YearOfExperience)
+                   VALUES ('{SSN}', '{Spec}', {YOE});""")
+    conn.commit()

@@ -109,6 +109,7 @@ def init_database():
     cursor.execute("""IF NOT EXISTS(SELECT * FROM sys.tables WHERE name = 'MaintenanceTask')
                      BEGIN
                    CREATE TABLE MaintenanceTask (TaskID INT IDENTITY(1, 1) NOT NULL,
+                   TaskDescription VARCHAR(300),
                     Date DATE,
                     Labour DECIMAL(10, 2),
                     OrderID INT,
@@ -160,7 +161,7 @@ def init_database():
     cursor.execute("""IF NOT EXISTS(SELECT * FROM sys.tables WHERE name = 'Fix')
                    BEGIN
                    CREATE TABLE Fix (VIN CHAR(17),
-                    TaskID INT,
+                    TaskID INT UNIQUE,
                     PartNumber INT,
                     CONSTRAINT fix_constraint_pk PRIMARY KEY(VIN, TaskID, PartNumber),
                     CONSTRAINT fix_constraint_fk FOREIGN KEY(VIN) REFERENCES Car(VIN),
@@ -184,6 +185,5 @@ def init_database():
                     CONSTRAINT customer_phone_constraint_fk FOREIGN KEY(CustomerID) REFERENCES Customer(CustomerID))
                    END""")
     
-
 
 init_database()
