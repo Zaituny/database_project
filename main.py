@@ -2,11 +2,12 @@
 from database_functions import *
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit
 
 engineer_window = None
 admin_window = None
 receptionist_window = None
+newOrder_window = None
 
 class LoginScreen(QWidget):
     def __init__(self):
@@ -60,6 +61,14 @@ class LoginScreen(QWidget):
                 engineer_window.show()
             except:
                 print("engineer not found")
+
+        elif role == "Receptionist":
+            try:
+                self.close()
+                receptionist_window = ReceptionistWindow()
+                receptionist_window.show()
+            except:
+                print("Receptionist not found")
 
 class AdminWindow(QWidget):
     def __init__(self, first_name, sur_name, last_name, email):
@@ -270,6 +279,102 @@ class EngineerWindow(QWidget):
     def logout(self):
         self.close()
         login_window.show()
+
+
+class ReceptionistWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Receptionist")
+        self.setGeometry(100, 100, 400, 300)
+
+        layout = QVBoxLayout()
+
+        
+        self.add_new_task_btn = QPushButton('Add New Task', self)
+        self.add_new_order_btn = QPushButton('Add New Order', self)
+        layout.addStretch(1)  # Add stretching space to center buttons
+        layout.addWidget(self.add_new_task_btn)
+        layout.addWidget(self.add_new_order_btn)
+        layout.addStretch(1)  # Add stretching space to center buttons
+        self.add_new_order_btn.clicked.connect(self.createNewOrder)
+        self.add_new_task_btn.clicked.connect(self.createNewTask)
+
+
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.clicked.connect(self.logout)
+        layout.addWidget(self.logout_button)
+        
+
+        self.setLayout(layout)
+
+    def logout(self):
+        self.close()
+        login_window.show()
+
+    def createNewOrder(self):
+        global newOrder_window
+        newOrder_window = newOrder(add_new_order()[0])
+        self.close()
+        newOrder_window.show()
+
+    def createNewTask(self):
+        pass
+
+
+class newOrder(QWidget):
+    def __init__(self, Order_ID):
+        super().__init__()
+        self.Order_ID = Order_ID
+        self.setWindowTitle("New Order")
+        self.setGeometry(100, 100, 400, 300)
+
+        self.add_layout = QVBoxLayout()
+        
+
+        
+        self.description = QTextEdit()
+        self.labour = QLineEdit()
+        self.centerNumber = QLineEdit()
+
+
+        self.add_layout = QVBoxLayout()
+        self.add_layout.addWidget(QLabel("Task Description: "))
+        self.add_layout.addWidget(self.description)
+        self.add_layout.addWidget(QLabel("Labour Cost: "))
+        self.add_layout.addWidget(self.labour)
+        self.add_layout.addWidget(QLabel("Center Number: "))
+        self.add_layout.addWidget(self.centerNumber)
+
+        self.add_new_task_btn = QPushButton('Add New Task', self)
+        self.add_layout.addStretch(1)  # Add stretching space to center buttons
+        self.add_layout.addWidget(self.add_new_task_btn)
+        self.add_new_task_btn.clicked.connect(self.addTask)
+
+        self.logout_button = QPushButton("Logout")
+        self.logout_button.clicked.connect(self.logout)
+        self.add_layout.addWidget(self.logout_button)
+        
+
+        self.setLayout(self.add_layout)
+
+    def logout(self):
+        self.close()
+        login_window.show()
+
+    def addTask(self):
+        add_new_task(self.description.toPlainText(), self.labour.text(), self.Order_ID, self.centerNumber.text())
+        self.description.setText("")
+        self.labour.setText("")
+        self.centerNumber.setText("")
+
+
+
+def row_to_string(row):
+    result = ""
+    for column in row.cursor_description:
+        result += str(getattr(row, column[0])) + " "
+    return result.strip()
+
 
 
 if __name__ == "__main__":

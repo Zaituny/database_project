@@ -1,4 +1,5 @@
 from database_connection import *
+import datetime
 
 def find_engineer_by_ssn(ssn):
     cursor.execute(f"""SELECT FirstName, SurName, LastName, Email FROM Employee
@@ -69,3 +70,18 @@ def add_engineer(SSN, Spec, YOE):
     cursor.execute(f"""INSERT INTO Engineer (EngSSN, Spec, YearOfExperience)
                    VALUES ('{SSN}', '{Spec}', {YOE});""")
     conn.commit()
+
+
+def add_new_order():
+    cursor.execute(f"""INSERT INTO RepairOrder(Status) VALUES ('not')""")
+    conn.commit()
+    cursor.execute("SELECT @@IDENTITY")
+    return cursor.fetchone()
+
+def add_new_task(Description, Labour, Order_ID, CenterNumber):
+    string = f"""INSERT INTO MaintenanceTask(TaskDescription, Date, Labour, OrderID, CenterNumber)
+                    VALUES ('{Description}', '{datetime.date.today()}', '{Labour}', {Order_ID}, '{CenterNumber}');"""
+    cursor.execute(string)
+    conn.commit()
+
+    
