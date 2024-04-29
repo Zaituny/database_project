@@ -47,7 +47,7 @@ def find_tasks_by_EngSSN(EngSSN):
     return cursor.fetchall()
 
 def find_admin_by_ssn(SSN):
-    cursor.execute(f"""SELECT FirstName, SurName, LastName, Email FROM Employee
+    cursor.execute(f"""SELECT SSN FROM Employee
                    WHERE SSN = '{SSN}' AND position='admin';""")
     return cursor.fetchone()
 
@@ -84,4 +84,31 @@ def add_new_task(Description, Labour, Order_ID, CenterNumber):
     cursor.execute(string)
     conn.commit()
 
-    
+def calculate_average_salary():
+    cursor.execute("SELECT AVG(Salary) FROM Employee")
+    return cursor.fetchone()
+
+def count_employees_by_position():
+    cursor.execute("SELECT Position, COUNT(*) FROM Employee GROUP BY Position")
+    return cursor.fetchall()
+
+def number_of_tasks_per_engineer():
+    cursor.execute(f"""SELECT EngSSN, COUNT(*) FROM Performs
+                   GROUP BY EngSSN;""")
+    return cursor.fetchall()
+
+def remove_employee(SSN):
+    cursor.execute(f"DELETE FROM Employee WHERE SSN = '{SSN}'")
+    conn.commit()
+
+def remove_engineer(SSN):
+    cursor.execute(f"DELETE FROM Engineer WHERE EngSSN = '{SSN}'")
+    conn.commit()
+    cursor.execute(f"DELETE FROM Employee WHERE SSN = '{SSN}'")
+    conn.commit()
+
+def update_engineer(EngSSN, first_name, sur_name, last_name, email):
+    cursor.execute(f"""UPDATE Employee
+                   SET FirstName = '{first_name}', SurName = '{sur_name}', LastName = '{last_name}', Email = '{email}'
+                   WHERE SSN = '{EngSSN}';""")
+    conn.commit()

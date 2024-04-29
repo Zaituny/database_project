@@ -2,12 +2,13 @@
 from database_functions import *
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit
 
 engineer_window = None
 admin_window = None
 receptionist_window = None
 newOrder_window = None
+newTask_window = None
 
 class LoginScreen(QWidget):
     def __init__(self):
@@ -46,21 +47,27 @@ class LoginScreen(QWidget):
         role = self.role_dropdown.currentText()
         if role == "Admin":
             try:
-                first_name, sur_name, last_name, email = find_admin_by_ssn(ssn)
+                assn = find_admin_by_ssn(ssn)
+                if assn is None:
+                    raise Exception("Admin not found")
                 self.close()
-                admin_window = AdminWindow(first_name, sur_name, last_name, email)
+                admin_window = AdminWindow()
                 admin_window.show()
             except:
                 print("admin not found")
         
         elif role == "Engineer":
-            try:
-                first_name, sur_name, last_name, email =  find_engineer_by_ssn(ssn)
-                self.close()
-                engineer_window = EngineerWindow(ssn, first_name, sur_name, last_name, email)
-                engineer_window.show()
-            except:
-                print("engineer not found")
+            first_name, sur_name, last_name, email =  find_engineer_by_ssn(ssn)
+            self.close()
+            engineer_window = EngineerWindow(ssn, first_name, sur_name, last_name, email)
+            engineer_window.show()
+            # try:
+            #     first_name, sur_name, last_name, email =  find_engineer_by_ssn(ssn)
+            #     self.close()
+            #     engineer_window = EngineerWindow(ssn, first_name, sur_name, last_name, email)
+            #     engineer_window.show()
+            # except:
+            #     print("engineer not found")
 
         elif role == "Receptionist":
             try:
@@ -71,7 +78,7 @@ class LoginScreen(QWidget):
                 print("Receptionist not found")
 
 class AdminWindow(QWidget):
-    def __init__(self, first_name, sur_name, last_name, email):
+    def __init__(self):
         super().__init__()
         self.setWindowTitle("Admin")
         self.setGeometry(100, 100, 400, 300)
@@ -96,6 +103,7 @@ class AdminWindow(QWidget):
         self.yoe_label = QLabel("Years of Experience: ")
 
         self.tabs = QTabWidget()
+        self.statistics_tab = QWidget()
         self.add_tab = QWidget()
         self.remove_tab = QWidget()
 
@@ -138,10 +146,57 @@ class AdminWindow(QWidget):
         self.add_tab.setLayout(self.add_layout)
 
 
-        self.remove_tab.setLayout(QVBoxLayout())
-        self.remove_tab.layout().addWidget(QLabel("Remove Engineer or Receptionist:"))
+        self.remove_layout = QVBoxLayout()
+        self.role_dropdown_remove = QComboBox()
+        self.role_dropdown_remove.addItems(["Engineer", "Employee"])
 
+        self.remove_layout.addWidget(self.role_dropdown_remove)
+        self.ssn_layout = QHBoxLayout()
+        self.ssn_layout.addWidget(QLabel("SSN: "))
+        self.ssn_remove = QLineEdit()
+        self.ssn_layout.addWidget(self.ssn_remove)
+        self.remove_layout.addLayout(self.ssn_layout)
+        self.remove_button = QPushButton("Remove")
+        self.remove_layout.addWidget(self.remove_button)
+        self.remove_button.clicked.connect(self.remove)
 
+        self.remove_tab.setLayout(self.remove_layout)
+
+        self.statistics_tab.setLayout(QVBoxLayout())
+        #
+        self.average_layout = QHBoxLayout()
+        self.average_layout.addWidget(QLabel("Average Salary:"))
+        self.average_layout.addWidget(QLabel(str(calculate_average_salary()[0])))
+        #
+        self.number_of_employees_layout = QHBoxLayout()
+        self.number_of_employees_table = QTableWidget()
+        self.number_of_employees_table.setColumnCount(2)
+        count_result = count_employees_by_position()
+        self.number_of_employees_table.setRowCount(len(count_result))
+
+        self.number_of_employees_table.setHorizontalHeaderLabels(["Position", "Number of Employees"])
+        for row, (position, count) in enumerate(count_result):
+            self.number_of_employees_table.setItem(row, 0, QTableWidgetItem(position))
+            self.number_of_employees_table.setItem(row, 1, QTableWidgetItem(str(count)))
+        self.number_of_employees_layout.addWidget(self.number_of_employees_table)
+        #
+        self.number_of_tasks_layout = QHBoxLayout()
+        self.number_of_tasks_table = QTableWidget()
+        self.number_of_tasks_table.setColumnCount(2)
+        task_count_result = number_of_tasks_per_engineer()
+        self.number_of_tasks_table.setRowCount(len(task_count_result))
+        self.number_of_tasks_table.setHorizontalHeaderLabels(["Engineer SSN", "Number of Tasks"])
+        for row, (ssn, count) in enumerate(task_count_result):
+            self.number_of_tasks_table.setItem(row, 0, QTableWidgetItem(ssn))
+            self.number_of_tasks_table.setItem(row, 1, QTableWidgetItem(str(count)))
+
+        self.number_of_tasks_layout.addWidget(self.number_of_tasks_table)
+
+        self.statistics_tab.layout().addLayout(self.average_layout)
+        self.statistics_tab.layout().addLayout(self.number_of_employees_layout)
+        self.statistics_tab.layout().addLayout(self.number_of_tasks_layout)
+
+        self.tabs.addTab(self.statistics_tab, "Statistics")
         self.tabs.addTab(self.add_tab, "Add")
         self.tabs.addTab(self.remove_tab, "Remove")
 
@@ -152,7 +207,7 @@ class AdminWindow(QWidget):
         self.add_button = QPushButton("Add")
         self.logout_button.clicked.connect(self.logout)
         self.add_button.clicked.connect(self.add)
-        layout.addWidget(self.add_button)
+        self.add_layout.addWidget(self.add_button)
         layout.addWidget(self.logout_button)
         
 
@@ -207,18 +262,30 @@ class AdminWindow(QWidget):
             self.yoe_label.hide()
             self.yoe.hide()
         
+    def remove(self):
+        ssn = self.ssn_remove.text()
+        if self.role_dropdown_remove.currentText() == "Engineer":
+            try:
+                remove_engineer(ssn)
+            except:
+                print("Engineer not found")
+        else:
+            try:
+                remove_employee(ssn)
+            except:
+                print("Employee not found")
 
 class EngineerWindow(QWidget):
     def __init__(self, EngSSN,first_name, sur_name, last_name, email):
         super().__init__()
         self.setWindowTitle("Engineer")
         self.setGeometry(100, 100, 400, 300)
-
+        self.EngSSN = EngSSN
         layout = QVBoxLayout()
 
-        order_data = find_Orders_by_EngSSN(EngSSN)
+        order_data = find_Orders_by_EngSSN(self.EngSSN)
 
-        task_data = find_tasks_by_EngSSN(EngSSN)
+        task_data = find_tasks_by_EngSSN(self.EngSSN)
 
         self.table_orders = QTableWidget()
         self.table_orders.setColumnCount(len(order_data[0]))
@@ -249,12 +316,33 @@ class EngineerWindow(QWidget):
         self.order_tab = QWidget()
         self.tasks_tab = QWidget()
 
+        self.first_name_line = QLineEdit(first_name)
+        self.sur_name_line = QLineEdit(sur_name)
+        self.last_name_line = QLineEdit(last_name)
+        self.email_line = QLineEdit(email)
 
+        self.first_name_line.setReadOnly(True)
+        self.sur_name_line.setReadOnly(True)
+        self.last_name_line.setReadOnly(True)
+        self.email_line.setReadOnly(True)
+
+        self.control_layout = QHBoxLayout()
+        self.save_button = QPushButton("Save")
+        self.edit_button = QPushButton("Edit")
+        self.save_button.clicked.connect(self.save)
+        self.edit_button.clicked.connect(self.edit)
+        self.control_layout.addWidget(self.save_button)
+        self.control_layout.addWidget(self.edit_button)
         self.account_layout = QVBoxLayout()
         self.account_layout.addWidget(QLabel(f"First Name: {first_name}"))
+        self.account_layout.addWidget(self.first_name_line)
         self.account_layout.addWidget(QLabel(f"Surname: {sur_name}"))
+        self.account_layout.addWidget(self.sur_name_line)
         self.account_layout.addWidget(QLabel(f"Last Name: {last_name}"))
+        self.account_layout.addWidget(self.last_name_line)
         self.account_layout.addWidget(QLabel(f"Email: {email}"))
+        self.account_layout.addWidget(self.email_line)
+        self.account_layout.addLayout(self.control_layout)
         self.account_tab.setLayout(self.account_layout)
 
         self.order_tab.setLayout(QVBoxLayout())
@@ -279,6 +367,23 @@ class EngineerWindow(QWidget):
     def logout(self):
         self.close()
         login_window.show()
+
+    def save(self):
+        self.first_name_line.setReadOnly(True)
+        self.sur_name_line.setReadOnly(True)
+        self.last_name_line.setReadOnly(True)
+        self.email_line.setReadOnly(True)
+        first_name = self.first_name_line.text()
+        sur_name = self.sur_name_line.text()
+        last_name = self.last_name_line.text()
+        email = self.email_line.text()
+        update_engineer(self.EngSSN, first_name, sur_name, last_name, email)
+    
+    def edit(self):
+        self.first_name_line.setReadOnly(False)
+        self.sur_name_line.setReadOnly(False)
+        self.last_name_line.setReadOnly(False)
+        self.email_line.setReadOnly(False)
 
 
 class ReceptionistWindow(QWidget):
@@ -318,7 +423,10 @@ class ReceptionistWindow(QWidget):
         newOrder_window.show()
 
     def createNewTask(self):
-        pass
+        global newTask_window
+        newTask_window = newTask()
+        self.close()
+        newTask_window.show()
 
 
 class newOrder(QWidget):
@@ -350,16 +458,16 @@ class newOrder(QWidget):
         self.add_layout.addWidget(self.add_new_task_btn)
         self.add_new_task_btn.clicked.connect(self.addTask)
 
-        self.logout_button = QPushButton("Logout")
-        self.logout_button.clicked.connect(self.logout)
+        self.logout_button = QPushButton("Back")
+        self.logout_button.clicked.connect(self.back)
         self.add_layout.addWidget(self.logout_button)
         
 
         self.setLayout(self.add_layout)
 
-    def logout(self):
+    def back(self):
         self.close()
-        login_window.show()
+        receptionist_window.show()
 
     def addTask(self):
         add_new_task(self.description.toPlainText(), self.labour.text(), self.Order_ID, self.centerNumber.text())
@@ -367,14 +475,52 @@ class newOrder(QWidget):
         self.labour.setText("")
         self.centerNumber.setText("")
 
+class newTask(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("New Task")
+        self.setGeometry(100, 100, 400, 300)
+
+        self.add_layout = QVBoxLayout()
+        
+
+        self.order_id = QLineEdit()
+        self.description = QTextEdit()
+        self.labour = QLineEdit()
+        self.centerNumber = QLineEdit()
 
 
-def row_to_string(row):
-    result = ""
-    for column in row.cursor_description:
-        result += str(getattr(row, column[0])) + " "
-    return result.strip()
+        self.add_layout = QVBoxLayout()
+        self.add_layout.addWidget(QLabel("OrderID: "))
+        self.add_layout.addWidget(self.order_id)
+        self.add_layout.addWidget(QLabel("Task Description: "))
+        self.add_layout.addWidget(self.description)
+        self.add_layout.addWidget(QLabel("Labour Cost: "))
+        self.add_layout.addWidget(self.labour)
+        self.add_layout.addWidget(QLabel("Center Number: "))
+        self.add_layout.addWidget(self.centerNumber)
 
+        self.add_new_task_btn = QPushButton('Add New Task', self)
+        self.add_layout.addStretch(1)  # Add stretching space to center buttons
+        self.add_layout.addWidget(self.add_new_task_btn)
+        self.add_new_task_btn.clicked.connect(self.addTask)
+
+        self.logout_button = QPushButton("Back")
+        self.logout_button.clicked.connect(self.back)
+        self.add_layout.addWidget(self.logout_button)
+        
+
+        self.setLayout(self.add_layout)
+
+    def back(self):
+        self.close()
+        receptionist_window.show()
+
+    def addTask(self):
+        add_new_task(self.description.toPlainText(), self.labour.text(), self.order_id.text(), self.centerNumber.text())
+        self.description.setText("")
+        self.labour.setText("")
+        self.centerNumber.setText("")
 
 
 if __name__ == "__main__":

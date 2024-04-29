@@ -1,7 +1,8 @@
 import pyodbc as odbc
 
 DRIVER_NAME = 'ODBC Driver 18 for SQL Server'
-SERVER_NAME = 'SASA'
+# SERVER_NAME = 'SASA'
+SERVER_NAME = 'LAPTOP-BI65VNTK'
 
 connection_string = f'DRIVER={{{DRIVER_NAME}}};SERVER={SERVER_NAME};Trusted_Connection=yes;Encrypt=no;TrustServerCertificate=yes;'
 
