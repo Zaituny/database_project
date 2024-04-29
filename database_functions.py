@@ -112,3 +112,16 @@ def update_engineer(EngSSN, first_name, sur_name, last_name, email):
                    SET FirstName = '{first_name}', SurName = '{sur_name}', LastName = '{last_name}', Email = '{email}'
                    WHERE SSN = '{EngSSN}';""")
     conn.commit()
+
+
+def add_customer(FirstName, SurName, LastName, Email, DOB, Sex, City, District, Street, BuildingNumber):
+    cursor.execute(f"""INSERT INTO Customer(FirstName, SurName, LastName, Email, Dob, Sex, City, District, Street, BuildingNumber)
+                     VALUES ('{FirstName}', '{SurName}', '{LastName}', '{Email}', '{DOB}', '{Sex}', '{City}', '{District}', '{Street}', '{BuildingNumber}');""")
+    conn.commit()
+    cursor.execute("SELECT @@IDENTITY")
+    return cursor.fetchone()
+
+def add_car(VIN, Brand, ModelType, ModelName, Year, CustomerID):
+    cursor.execute(f"""INSERT INTO Car(VIN, Brand, ModelType, ModelName, ModelYear, CustomerID)
+                     VALUES ('{VIN}', '{Brand}', '{ModelType}', '{ModelName}', {Year}, {CustomerID});""")
+    conn.commit()

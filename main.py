@@ -2,11 +2,12 @@
 from database_functions import *
 
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QVBoxLayout, QHBoxLayout, QGridLayout,QPushButton, QComboBox, QTabWidget, QTableWidget, QTableWidgetItem, QTextEdit
 
 engineer_window = None
 admin_window = None
 receptionist_window = None
+newCustomerInfo_window = None
 newOrder_window = None
 newTask_window = None
 
@@ -417,10 +418,10 @@ class ReceptionistWindow(QWidget):
         login_window.show()
 
     def createNewOrder(self):
-        global newOrder_window
-        newOrder_window = newOrder(add_new_order()[0])
+        global newCustomerInfo_window
+        newCustomerInfo_window = newCustomerInfo()
         self.close()
-        newOrder_window.show()
+        newCustomerInfo_window.show()
 
     def createNewTask(self):
         global newTask_window
@@ -428,6 +429,112 @@ class ReceptionistWindow(QWidget):
         self.close()
         newTask_window.show()
 
+
+class newCustomerInfo(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("New Customer")
+        self.setGeometry(100, 100, 400, 300)
+
+        self.form_and_button = QVBoxLayout()
+        self.form_layout = QHBoxLayout()
+
+        self.customer_layout = QGridLayout()  
+      
+        self.firstname = QLineEdit()
+        self.firstname_label = QLabel("First Name: ")
+        self.customer_layout.addWidget(self.firstname_label, 0, 0)
+        self.customer_layout.addWidget(self.firstname, 0, 1)
+        self.surname = QLineEdit()
+        self.surname_label = QLabel("Surname: ")
+        self.customer_layout.addWidget(self.surname_label, 1, 0)
+        self.customer_layout.addWidget(self.surname, 1, 1)
+        self.lastname = QLineEdit()
+        self.lastname_label = QLabel("Last Name: ")
+        self.customer_layout.addWidget(self.lastname_label, 2, 0)
+        self.customer_layout.addWidget(self.lastname, 2, 1)
+        self.email = QLineEdit()
+        self.email_label = QLabel("Email: ")
+        self.customer_layout.addWidget(self.email_label, 3, 0)
+        self.customer_layout.addWidget(self.email, 3, 1)
+        self.dob = QLineEdit()
+        self.dob_label = QLabel("DOB: ")
+        self.customer_layout.addWidget(self.dob_label, 4, 0)
+        self.customer_layout.addWidget(self.dob, 4, 1)
+        self.sex = QLineEdit()
+        self.sex_label = QLabel("Sex:")
+        self.customer_layout.addWidget(self.sex_label, 5, 0)
+        self.customer_layout.addWidget(self.sex, 5, 1)
+        self.city = QLineEdit()
+        self.city_label = QLabel("City: ")
+        self.customer_layout.addWidget(self.city_label, 6, 0)
+        self.customer_layout.addWidget(self.city, 6, 1)
+        self.district = QLineEdit()
+        self.district_label = QLabel("District: ")
+        self.customer_layout.addWidget(self.district_label, 7, 0)
+        self.customer_layout.addWidget(self.district, 7, 1)
+        self.street = QLineEdit()
+        self.street_label = QLabel("Street: ")
+        self.customer_layout.addWidget(self.street_label, 8, 0)
+        self.customer_layout.addWidget(self.street, 8, 1)
+        self.building_number = QLineEdit()
+        self.building_number_label = QLabel("Building Number: ")
+        self.customer_layout.addWidget(self.building_number_label, 9, 0)
+        self.customer_layout.addWidget(self.building_number, 9, 1)
+
+        self.car_layout = QGridLayout()
+        self.vin = QLineEdit()
+        self.vin_label = QLabel("VIN: ")
+        self.car_layout.addWidget(self.vin_label, 0, 0)
+        self.car_layout.addWidget(self.vin, 0, 1)
+        self.brand = QLineEdit()
+        self.brand_label = QLabel("Brand: ")
+        self.car_layout.addWidget(self.brand_label, 1, 0)
+        self.car_layout.addWidget(self.brand, 1, 1)
+        self.model_type = QLineEdit()
+        self.model_type_label = QLabel("Model Type: ")
+        self.car_layout.addWidget(self.model_type_label, 2, 0)
+        self.car_layout.addWidget(self.model_type, 2, 1)
+        self.model_name = QLineEdit()
+        self.model_name_label = QLabel("Model Name: ")
+        self.car_layout.addWidget(self.model_name_label, 3, 0)
+        self.car_layout.addWidget(self.model_name, 3, 1)
+        self.model_year = QLineEdit()
+        self.model_year_label = QLabel("Model Year: ")
+        self.car_layout.addWidget(self.model_year_label, 4, 0)
+        self.car_layout.addWidget(self.model_year, 4, 1)
+
+        self.form_layout.addLayout(self.customer_layout)
+        self.form_layout.addLayout(self.car_layout)
+
+        self.create_customer_and_car_button = QPushButton('Create')
+        self.create_customer_and_car_button.clicked.connect(self.createCustomerAndCar)
+        self.form_and_button.addLayout(self.form_layout)
+        self.form_and_button.addWidget(self.create_customer_and_car_button)
+        self.setLayout(self.form_and_button)
+    
+    def createCustomerAndCar(self):
+        global newOrder_window
+        customerID = add_customer(
+                     self.firstname.text(),
+                     self.surname.text(),
+                     self.lastname.text(),
+                     self.email.text(),
+                     self.dob.text(),
+                     self.sex.text(),
+                    self.city.text(),
+                    self.district.text(),
+                    self.street.text(),
+                    self.building_number.text())[0]
+        add_car(self.vin.text(),
+                self.brand.text(),
+                self.model_type.text(),
+                self.model_name.text(),
+                self.model_year.text(),
+                customerID)
+        newOrder_window = newOrder(add_new_order()[0])
+        self.close()
+        newOrder_window.show()
 
 class newOrder(QWidget):
     def __init__(self, Order_ID):
